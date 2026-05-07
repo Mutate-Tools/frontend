@@ -41,12 +41,12 @@ const ReferralProgram = () => {
               >
                 Open dapp <FiArrowRight />
               </Link>
-              <a
-                href="#faqs"
-                className="inline-flex h-12 items-center rounded-full border border-white/15 px-6 font-spaceGrotesk text-sm text-white/80 transition hover:bg-white/10"
+              <Link
+                href="/ambassador-program"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 px-6 font-spaceGrotesk text-sm text-white/80 transition hover:bg-white/10"
               >
-                Learn more
-              </a>
+                Ambassador Program <FiArrowRight />
+              </Link>
             </div>
           </div>
 

@@ -20,6 +20,7 @@ import {
 } from "@/src/utils/crypto/identity-util";
 import { generateUserPrekeyBundle } from "@/src/utils/crypto/x3dh-util";
 import { getBackendUrl } from '@/src/utils/backend-url';
+import { notifyPointsMayHaveChanged } from "@/src/utils/point-meta";
 
 export interface UserProfile {
   emailHash: string;
@@ -33,6 +34,7 @@ export interface UserProfile {
   referralCode?: string | null;
   referredBy?: string | null;
   chatPoints?: number;
+  mpEarningDisabled?: boolean;
   referralPoints?: number;
   totalReferrals?: number;
 
@@ -211,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const avatarUrl: string = res.data?.avatarUrl;
       if (!avatarUrl) throw new Error("upload_failed");
       if (res.data?.profile) setProfile(res.data.profile as UserProfile);
+      notifyPointsMayHaveChanged();
       return { avatarUrl };
     },
     [token]
@@ -332,8 +335,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       )
       .then(() => {
         localStorage.removeItem("pending_ref");
-
-        fetchProfile(token).then((p) => { if (p) setProfile(p); });
+        fetchProfile(token).then((p) => { if (p) { setProfile(p); notifyPointsMayHaveChanged(); } });
       })
       .catch((e) => {
         const status = e?.response?.status;

@@ -71,6 +71,13 @@ const Drawer: React.FC<DrawerProps> = ({ setShowDrawer }) => {
           ))}
 
           <Link
+            href="/ambassador-program"
+            className="text-[14px] h-[42px] px-[17px] flex items-center rounded-full cursor-pointer text-white border border-[#FFFFFF38] whitespace-nowrap"
+          >
+            Ambassador Program
+          </Link>
+
+          <Link
             href="/whitepaper"
             target="_blank"
             rel="noopener noreferrer"
@@ -80,7 +87,7 @@ const Drawer: React.FC<DrawerProps> = ({ setShowDrawer }) => {
           </Link>
 
           <Link
-            href="https://github.com"
+            href="https://github.com/Mutate-Tools"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[14px] h-[42px] px-[17px] flex items-center rounded-full cursor-pointer text-white border border-[#FFFFFF38] whitespace-nowrap"

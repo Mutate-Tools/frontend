@@ -54,6 +54,13 @@ const Navbar: React.FC = () => {
             ))}
 
             <Link
+              href="/ambassador-program"
+              className="shrink-0 text-[14px] h-[42px] px-[17px] flex items-center justify-center rounded-full cursor-pointer text-white bg-[#FFFFFF1A] border border-[#FFFFFF38] whitespace-nowrap"
+            >
+              Ambassador Program
+            </Link>
+
+            <Link
               href="/whitepaper"
               target="_blank"
               rel="noopener noreferrer"

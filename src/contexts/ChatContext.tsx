@@ -60,6 +60,7 @@ import {
 import { decryptFromDevice, encryptForDevice } from "@/src/utils/crypto/device-crypto-util";
 import { markDeletedUserHash } from "@/src/utils/deleted-user-util";
 import { getBackendUrl } from '@/src/utils/backend-url';
+import { buildPointMeta, notifyPointsMayHaveChanged } from "@/src/utils/point-meta";
 import { lsGet, lsGetJSON, lsRemove, lsSet, lsSetJSON } from "@/src/utils/safe-storage";
 
 export interface GroupMemberRef {
@@ -1627,6 +1628,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           envelopes,
           contentTopic: `chat-${[myHash, other].sort().join("-")}`,
           messageType: opts?.messageType || "text",
+          pointMeta:
+            (opts?.messageType || "text") === "text"
+              ? await buildPointMeta(content, `dm:${[myHash, other].sort().join(":")}`)
+              : undefined,
         };
         const postStartedAt = perfNow();
         const res = await axios.post(`${BACKEND_URL}/chat/send`, payload, {
@@ -1653,6 +1658,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         });
         upsertSummary(local);
         emitDMActivity(other, local.timestamp);
+        notifyPointsMayHaveChanged();
         scheduleVaultBackup();
         logPerf("dm send total", totalStartedAt, 200);
       } catch (e: any) {
@@ -1964,7 +1970,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const postStartedAt = perfNow();
         const res = await axios.post(
           `${BACKEND_URL}/groups/${groupId}/messages`,
-          { keyId, ciphertext, nonce, messageType: opts?.messageType || "text" },
+          {
+            keyId,
+            ciphertext,
+            nonce,
+            messageType: opts?.messageType || "text",
+            pointMeta:
+              (opts?.messageType || "text") === "text"
+                ? await buildPointMeta(content, `group:${groupId}`)
+                : undefined,
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         logPerf("group post", postStartedAt, 150);
@@ -1987,6 +2002,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             g._id === groupId ? { ...g, updatedAt: new Date(local.timestamp).toISOString() } : g
           )
         );
+        notifyPointsMayHaveChanged();
         scheduleVaultBackup();
         logPerf("group send total", totalStartedAt, 200);
       } catch (e) {
@@ -2063,6 +2079,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           copy[idx] = group;
           return copy;
         });
+        notifyPointsMayHaveChanged();
       }
       return {
         status: res.data.status,

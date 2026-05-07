@@ -22,6 +22,7 @@ import {
 } from "@/src/utils/crypto/identity-util";
 import { generateUserPrekeyBundle } from "@/src/utils/crypto/x3dh-util";
 import { getBackendUrl } from '@/src/utils/backend-url';
+import { notifyPointsMayHaveChanged } from "@/src/utils/point-meta";
 
 
 
@@ -367,6 +368,7 @@ export function SubProfileProvider({ children }: { children: ReactNode }) {
       setSubProfiles((prev) => [...prev, created]);
       setActiveIdentityHash(subHash);
       localStorage.setItem(activeSubProfileStorageKey(parentEmailHash), subHash);
+      notifyPointsMayHaveChanged();
 
       return created;
     },
@@ -441,6 +443,7 @@ export function SubProfileProvider({ children }: { children: ReactNode }) {
             s.identityHash === updated.identityHash ? updated : s
           )
         );
+        notifyPointsMayHaveChanged();
       }
       return { avatarUrl };
     },

@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { FiPlus, FiChevronDown, FiLogOut, FiBell, FiUserPlus } from "react-icons/fi";
+import {
+  FiPlus,
+  FiChevronDown,
+  FiLogOut,
+  FiBell,
+  FiUserPlus,
+} from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
 import btnbg from "@assets/loginbg.svg";
 import logo from "@assets/logo.svg";
@@ -13,13 +19,13 @@ import mobilelogo from "@assets/mobile/samlllogo.svg";
 import ManageProfile from "./manageProfile";
 import CreateGroup from "./createGroup";
 import NotificationInbox from "./notificationInbox";
+import PointsModal from "./pointsModal";
 import useUserStore from "../state/user-store";
 import env from "../constants/environment";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubProfile } from "../contexts/SubProfileContext";
 import { useRouter } from "next/navigation";
-import { getBackendUrl } from '@/src/utils/backend-url';
-
+import { getBackendUrl } from "@/src/utils/backend-url";
 
 const processedRealtimeNotificationIds = new Set<string>();
 
@@ -49,13 +55,13 @@ const ChatMainNav = () => {
   const [manageProfileOpen, setManageProfileOpen] = useState(false);
   const [createGroupModal, setCreateGroupModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showPoints, setShowPoints] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { activeTab, setActiveTab } = useUserStore();
-  const { profile, token, disconnect } = useAuth();
+  const { profile, token, disconnect, refreshProfile } = useAuth();
   const { activeSubProfile } = useSubProfile();
   const router = useRouter();
 
-  
   useEffect(() => {
     if (!token || !activeSubProfile?.identityHash) return;
     const fetchUnread = async () => {
@@ -67,19 +73,24 @@ const ChatMainNav = () => {
               Authorization: `Bearer ${token}`,
               "X-Identity-Hash": activeSubProfile.identityHash,
             },
-          }
+          },
         );
         setUnreadCount(res.data?.length || 0);
-      } catch (err) {
-        
-      }
+      } catch (err) {}
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
   }, [token, activeSubProfile?.identityHash]);
 
-  
+  useEffect(() => {
+    if (!token) return;
+    const handleRefresh = () => refreshProfile().catch(() => {});
+    window.addEventListener("mutate:points-refresh", handleRefresh);
+    return () =>
+      window.removeEventListener("mutate:points-refresh", handleRefresh);
+  }, [token, refreshProfile]);
+
   useEffect(() => {
     const handleNew = (event: any) => {
       const notif = event.detail;
@@ -124,12 +135,11 @@ const ChatMainNav = () => {
               </button>
             </div>
           ),
-          { duration: 5000, position: "top-right" }
+          { duration: 5000, position: "top-right" },
         );
       }
     };
-    const handleRemoved = () =>
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+    const handleRemoved = () => setUnreadCount((prev) => Math.max(0, prev - 1));
     const handleReadAll = () => setUnreadCount(0);
 
     window.addEventListener("friend:notification:new", handleNew);
@@ -138,7 +148,10 @@ const ChatMainNav = () => {
     return () => {
       window.removeEventListener("friend:notification:new", handleNew);
       window.removeEventListener("friend:notification:removed", handleRemoved);
-      window.removeEventListener("friend:notifications:read-all", handleReadAll);
+      window.removeEventListener(
+        "friend:notifications:read-all",
+        handleReadAll,
+      );
     };
   }, []);
 
@@ -169,6 +182,7 @@ const ChatMainNav = () => {
           setUnreadCount(0);
         }}
       />
+      <PointsModal open={showPoints} onClose={() => setShowPoints(false)} />
 
       <nav className="lg:container mx-auto flex items-center justify-between py-[10px] lg:py-4 lg:px-4 border-b border-white/10 relative z-30">
         <Image
@@ -226,21 +240,42 @@ const ChatMainNav = () => {
           </button>
 
           <div className="relative">
-            <button
+            <div
               data-profile-toggle
               onClick={() => setProfileOpen((p) => !p)}
-              className="flex items-center gap-3"
+              className="flex cursor-pointer items-center gap-3"
+              role="button"
+              tabIndex={0}
             >
               <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden">
-                <Image src={avatarSrc} alt="Profile" fill className="object-cover" unoptimized={!!profile?.avatarUrl} />
+                <Image
+                  src={avatarSrc}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                  unoptimized={!!profile?.avatarUrl}
+                />
               </div>
               <div className="text-left leading-tight">
                 <p className="text-white text-sm">{profile?.username ?? ""}</p>
+                {profile?.chatPoints !== undefined && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileOpen(false);
+                      setShowPoints(true);
+                    }}
+                    className="text-[10px] text-[#9AA4C7] leading-none hover:text-white"
+                  >
+                    {profile.chatPoints.toLocaleString()} MP
+                  </button>
+                )}
               </div>
               <FiChevronDown
                 className={`text-white transition ${profileOpen ? "rotate-180" : ""}`}
               />
-            </button>
+            </div>
 
             <AnimatePresence>
               {profileOpen && (

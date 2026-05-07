@@ -11,6 +11,7 @@ import Image from "next/image";
 import defaultlogo from "@assets/dapp/defaultlogo.svg";
 import env from "../constants/environment";
 import { useAuth } from "../contexts/AuthContext";
+import { notifyPointsMayHaveChanged } from "@/src/utils/point-meta";
 import E2EESettingsSection from "./e2eeSettingsSection";
 
 type ManageProfileProps = {
@@ -100,6 +101,7 @@ const ManageProfile: React.FC<ManageProfileProps> = ({ onClose }) => {
         walletAddress: wallet ? wallet.toLowerCase() : null,
         avatarId,
       });
+      notifyPointsMayHaveChanged();
       toast.success("Profile updated");
       onClose();
       router.push("/chat/inbox");

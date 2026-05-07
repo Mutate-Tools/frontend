@@ -8,7 +8,9 @@ import { FiCamera, FiX } from "react-icons/fi";
 import defaultlogo from "@assets/dapp/defaultlogo.svg";
 import env from "../constants/environment";
 import { useAuth } from "../contexts/AuthContext";
+import { notifyPointsMayHaveChanged } from "@/src/utils/point-meta";
 import E2EESettingsSection from "./e2eeSettingsSection";
+import PointsModal from "./pointsModal";
 
 const USERNAME_RE = /^[a-z0-9_]{3,24}$/;
 const WALLET_RE = /^0x[a-f0-9]{40}$/i;
@@ -23,6 +25,7 @@ const MobileProfile: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showPoints, setShowPoints] = useState(false);
 
   useEffect(() => {
     setUsername(profile?.username || "");
@@ -79,6 +82,7 @@ const MobileProfile: React.FC = () => {
         username: uname,
         walletAddress: wallet ? wallet.toLowerCase() : null,
       });
+      notifyPointsMayHaveChanged();
       toast.success("Profile updated");
     } catch (e: any) {
       toast.error(e?.response?.data?.error || e.message || "Failed to save");
@@ -94,6 +98,7 @@ const MobileProfile: React.FC = () => {
 
   return (
     <div className="relative bg-InboxBg p-4 pb-28 flex flex-col items-center">
+      <PointsModal open={showPoints} onClose={() => setShowPoints(false)} />
       <div className="flex items-center border-b border-white/20 pb-3 mb-6 w-full">
         <h1 className="text-white text-lg font-semibold w-full">Profile & Settings</h1>
       </div>
@@ -125,6 +130,24 @@ const MobileProfile: React.FC = () => {
           {profile?.username || "Guest"}
         </span>
       </div>
+
+      {profile?.chatPoints !== undefined && (
+        <button
+          type="button"
+          onClick={() => setShowPoints(true)}
+          className="w-full max-w-[364px] mb-4 rounded-[20px] border border-white/10 bg-white/[0.04] p-4 flex items-center justify-between text-left"
+        >
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">Chat Points</p>
+            <p className="mt-1 text-[28px] font-semibold text-white leading-none">
+              {profile.chatPoints.toLocaleString()}
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-[#3730EA]/20 border border-[#3730EA]/40 flex items-center justify-center">
+            <span className="text-[18px]">⚡</span>
+          </div>
+        </button>
+      )}
 
       <div className="w-full max-w-[364px] bg-white/10 p-5 rounded-[20px] flex flex-col gap-4">
         <div>
